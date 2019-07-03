@@ -1,0 +1,122 @@
+---
+title: "PML Pred Assignment"
+author: "Aahad"
+date: "June 30, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+This report is prepared as one of the requirement in Practical Machine Learning online course by Johns Hopkins University. The basic goal of this assignment is to predict the manner of the subject (6 participants) performed some exercise. For this assignment, in order to predict the manner of the subject did the exercise decision tree and random forest method will be performed to determine the best prediction. The best prediction is determined by the highest accuracy.
+
+## Background
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement ??? a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website [here](http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har)
+
+## Data
+The [training data](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv)
+
+The [test data](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
+
+The data for this project come from this [source](http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har)
+
+
+
+# Loading required packages.
+```{r prereq, message=FALSE,warning=FALSE}
+library(dplyr)
+library(caret)
+library(rpart)
+library(randomForest)
+library(e1071)
+```
+
+# Loading and reading the data.
+Here we load the data from the links provided and read it using the *read.csv* function.
+```{r load,results='hide',cache=TRUE}
+# downloading and readiing the data
+setwd("D:/R/PML")
+url_train="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+url_test="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+download.file(url_train,destfile="./training_data.csv")
+download.file(url_test,destfile="./testing_data.csv")
+
+training<-read.csv("./training_data.csv")
+testing <- read.csv("./testing_data.csv")
+```
+
+# Preprocessing
+We first take a look at the data and try to figure out which variables are usefull
+and which are not.  
+We can see that variable names starting with certain terms actually hold the usefull data and so we use the *grep* function to isolate those terms only and use the *dplyr* packages *select* function to select only those necessary columns.  
+We also check to see if the processed data has any na values or not.  
+We then further subdivide our training data set to training and validation so as to test out which method of training gives us the best results.
+```{r preproc,cache=TRUE}
+# Lets View the data
+head(training,3)
+# View(training) # unhash the start of this line to get a 
+# detailed view of the training data
+# from this we can see that variables starting with terms like total,accel etc
+# are the variables that actually contain data. So we use grep to pick up only 
+# those variables.
+usefull<-grep("^total|^accel|^gyro|^magnet|^roll|^pitch|^yaw|classe",
+              names(training),value=T)
+training_data<- select(training,usefull)
+sum(apply(training_data, 2, function(x) any(is.na(x))))
+# thus we have no columns containing NA we are now ready to train our data.
+# We now create a validation set from the training data
+notVal<-createDataPartition(training_data$classe,p=.75,list=F)
+validation_data<-training_data[-notVal,]
+training_data<-training_data[notVal,]
+dim(validation_data)
+dim(training_data)
+```
+
+
+# Training the model.
+We train the model using the the three most widely used methods namely **rpart**, **gbm** and **rf**.  
+**rpart** is R's decision tree algortihm that uses the gini impurity to select the splits.
+**gbm** stands for *gradient boosting machine* which is R's gradient boosting algorithm. Boosting is basically taking a bunch of weak variables and combining them together to create strong variables that can help explain the data better. 
+**gbm** is the boosting algorithm used for boosting with trees.
+**rf** stands for *random forest* and it is one of the most commonly used machine learning algorithm. A random forest algortihm basically is a bunch of decision trees put together and the result is an average value of those decision trees. The important aspect being each decision tree in the forest considers a random subset of features when forming questions and only has access to a random set of the training data points. Thus this makes our results more robust and accurate.
+```{r train,cache=TRUE}
+# First to define a training control to use cross validation
+control<-trainControl(method="cv",number = 3, verboseIter=F)
+
+# first we will try the rpart method
+fit_rpart<-train(classe~.,method="rpart",trControl = control,
+              data = training_data) 
+# fit_rpart$finalModel #unhash to see the model
+predicted_rpart<-predict(fit_rpart,newdata=validation_data)
+conf_rpart<-confusionMatrix(predicted_rpart,validation_data$classe)
+conf_rpart
+
+# Now we will try the gradient boosting machine
+fit_gbm<-train(classe~.,method="gbm",trControl= control,
+              data = training_data, verbose=F) 
+# fit_gbm$finalModel # unhash to see the final model
+predicted_gbm<-predict(fit_gbm,newdata=validation_data)
+conf_gbm<-confusionMatrix(predicted_gbm,validation_data$classe)
+conf_gbm
+
+# now we will try random forests
+fit_rf<-train(classe~.,method="rf",trControl= control,
+              data = training_data) 
+# fit_rf$finalModel # unhash to see the final model.
+predicted_rf<-predict(fit_rf,newdata=validation_data)
+conf_rf<-confusionMatrix(predicted_rf,validation_data$classe)
+conf_rf
+```
+
+# Conclusion 
+From the following results we can see that the random forest method used to train
+the model gives us the best accuracy.
+Thus for the final prediction we use the rf model.
+
+```{r final}
+pred_final<-predict(fit_rf,testing)
+## i am not displaying the results as it is part of the graded quiz.
+```
+
