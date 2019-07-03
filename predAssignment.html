@@ -169,7 +169,7 @@ testing &lt;- read.csv(&quot;./testing_data.csv&quot;)</code></pre>
 <p>We first take a look at the data and try to figure out which variables are usefull and which are not.<br />
 We can see that variable names starting with certain terms actually hold the usefull data and so we use the <em>grep</em> function to isolate those terms only and use the <em>dplyr</em> packages <em>select</em> function to select only those necessary columns.<br />
 We also check to see if the processed data has any na values or not.<br />
-We then further subdivide our training data set to training and validation so as to test out which method of training gives us the best results.</p>
+We then further subdivide our training data set to training and validation so as to estimate the out of sample errors and accuracy.</p>
 <pre class="r"><code># Lets View the data
 head(training,3)</code></pre>
 <pre><code>##   X user_name raw_timestamp_part_1 raw_timestamp_part_2   cvtd_timestamp
@@ -355,7 +355,9 @@ dim(validation_data)</code></pre>
 <div id="training-the-model." class="section level1">
 <h1>Training the model.</h1>
 <p>We train the model using the the three most widely used methods namely <strong>rpart</strong>, <strong>gbm</strong> and <strong>rf</strong>.<br />
-<strong>rpart</strong> is R’s decision tree algortihm that uses the gini impurity to select the splits. <strong>gbm</strong> stands for <em>gradient boosting machine</em> which is R’s gradient boosting algorithm. Boosting is basically taking a bunch of weak variables and combining them together to create strong variables that can help explain the data better. <strong>gbm</strong> is the boosting algorithm used for boosting with trees. <strong>rf</strong> stands for <em>random forest</em> and it is one of the most commonly used machine learning algorithm. A random forest algortihm basically is a bunch of decision trees put together and the result is an average value of those decision trees. The important aspect being each decision tree in the forest considers a random subset of features when forming questions and only has access to a random set of the training data points. Thus this makes our results more robust and accurate.</p>
+<strong>rpart</strong> is R’s decision tree algortihm that uses the gini impurity to select the splits.<br />
+<strong>gbm</strong> stands for <em>gradient boosting machine</em> which is R’s gradient boosting algorithm. Boosting is basically taking a bunch of weak variables and combining them together to create strong variables that can help explain the data better. <strong>gbm</strong> is the boosting algorithm used for boosting with trees.<br />
+<strong>rf</strong> stands for <em>random forest</em> and it is one of the most commonly used machine learning algorithm. A random forest algortihm basically is a bunch of decision trees put together and the result is an average value of those decision trees. The important aspect being each decision tree in the forest considers a random subset of features when forming questions and only has access to a random set of the training data points. Thus this makes our results more robust and accurate.</p>
 <pre class="r"><code># First to define a training control to use cross validation
 control&lt;-trainControl(method=&quot;cv&quot;,number = 3, verboseIter=F)
 
@@ -479,7 +481,7 @@ conf_rf</code></pre>
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
-<p>From the following results we can see that the random forest method used to train the model gives us the best accuracy. Thus for the final prediction we use the rf model.</p>
+<p>The confusion Matrix gives us the estimation of the out of sample error and accuracy of the respective models. From the following results we can see that the random forest method used to train the model gives us the best accuracy. Thus for the final prediction we use the rf model.</p>
 <pre class="r"><code>pred_final&lt;-predict(fit_rf,testing)
 ## i am not displaying the results as it is part of the graded quiz.</code></pre>
 </div>

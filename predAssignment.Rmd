@@ -52,7 +52,7 @@ We first take a look at the data and try to figure out which variables are usefu
 and which are not.  
 We can see that variable names starting with certain terms actually hold the usefull data and so we use the *grep* function to isolate those terms only and use the *dplyr* packages *select* function to select only those necessary columns.  
 We also check to see if the processed data has any na values or not.  
-We then further subdivide our training data set to training and validation so as to test out which method of training gives us the best results.
+We then further subdivide our training data set to training and validation so as to estimate the out of sample errors and accuracy.
 ```{r preproc,cache=TRUE}
 # Lets View the data
 head(training,3)
@@ -76,10 +76,10 @@ dim(training_data)
 
 
 # Training the model.
-We train the model using the the three most widely used methods namely **rpart**, **gbm** and **rf**.  
-**rpart** is R's decision tree algortihm that uses the gini impurity to select the splits.
+We train the model using the the three most widely used methods namely **rpart**, **gbm** and **rf**.   
+**rpart** is R's decision tree algortihm that uses the gini impurity to select the splits.  
 **gbm** stands for *gradient boosting machine* which is R's gradient boosting algorithm. Boosting is basically taking a bunch of weak variables and combining them together to create strong variables that can help explain the data better. 
-**gbm** is the boosting algorithm used for boosting with trees.
+**gbm** is the boosting algorithm used for boosting with trees.  
 **rf** stands for *random forest* and it is one of the most commonly used machine learning algorithm. A random forest algortihm basically is a bunch of decision trees put together and the result is an average value of those decision trees. The important aspect being each decision tree in the forest considers a random subset of features when forming questions and only has access to a random set of the training data points. Thus this makes our results more robust and accurate.
 ```{r train,cache=TRUE}
 # First to define a training control to use cross validation
@@ -111,6 +111,7 @@ conf_rf
 ```
 
 # Conclusion 
+The confusion Matrix gives us the estimation of the out of sample error and accuracy of the respective models.
 From the following results we can see that the random forest method used to train
 the model gives us the best accuracy.
 Thus for the final prediction we use the rf model.
